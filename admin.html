@@ -57,6 +57,17 @@
     body.loading { overflow: hidden; height: 100vh; }
     #splash-screen { transition: opacity 0.7s ease; }
 </style>
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "6235857d-565c-4223-bffa-af420f2cd45b",
+    });
+  });
+</script>
+    
 </head>
 <body class="pb-32 text-right">
     
