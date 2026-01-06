@@ -131,6 +131,19 @@
     </div>
 
     <script>
+        // --- لایه هوشمند برای اعضا ---
+(function() {
+    // چک کردن اینکه آیا قبلاً کسی در این گوشی وارد شده یا نه
+    const isMember = localStorage.getItem('user_id') || localStorage.getItem('pool_id');
+    
+    // اگر اطلاعات عضویت وجود داشت، مستقیم برو به صفحه لاگین
+    if (isMember) {
+        window.location.replace('login.html');
+    }
+})();
+// --------------------------
+
+        
         const SUPABASE_URL = 'https://kqnsbnpznkwkwukzokik.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_ZqXeccdaSzZUivCwU38WcQ_m05uT4y6';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
