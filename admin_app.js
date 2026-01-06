@@ -1102,3 +1102,65 @@ async function sendPushToAll() {
         alert("🚨 خطا در اتصال به اینترنت.");
     }
 }
+
+/************************************************
+ * تابع ذخیره تغییرات ویرایش عضو (نهایی و بدون خطا)
+ ************************************************/
+async function updateMember() {
+    try {
+        // ۱. گرفتن المان‌ها از صفحه
+        const idEl = document.getElementById('edit-member-id');
+        const nameEl = document.getElementById('edit-member-name');
+        const mobileEl = document.getElementById('edit-member-mobile');
+        const passEl = document.getElementById('edit-member-pass');
+        const sharesEl = document.getElementById('edit-member-shares');
+        const adminEl = document.getElementById('edit-member-is-admin');
+
+        // بررسی اینکه آیا همه کادرها در HTML وجود دارند
+        if (!idEl || !nameEl || !mobileEl) {
+            console.error("خطا: المان‌های مودال ویرایش در HTML پیدا نشدند!");
+            return;
+        }
+
+        const id = idEl.value;
+        const btn = event.currentTarget;
+        btn.disabled = true;
+        btn.innerText = "در حال ذخیره...";
+
+        // ۲. ساخت شیء داده‌های جدید
+        let updateData = {
+            full_name: nameEl.value.trim(),
+            mobile: mobileEl.value.trim(),
+            total_shares: parseInt(sharesEl.value) || 1,
+            is_admin: adminEl.checked
+        };
+
+        // ۳. فقط اگر رمز جدید وارد شده باشد، آن را تغییر بده
+        if (passEl.value && passEl.value.trim() !== "") {
+            updateData.password = passEl.value.trim();
+        }
+
+        // ۴. ارسال به Supabase
+        const { error } = await supabaseClient
+            .from('members')
+            .update(updateData)
+            .eq('id', id);
+
+        if (error) throw error;
+
+        // ۵. موفقیت
+        alert("تغییرات با موفقیت ذخیره شد ✅");
+        closeEditModal(); // بستن پنجره
+        loadAllMembers(localStorage.getItem('pool_id')); // آپدیت لیست
+
+    } catch (err) {
+        alert("خطا در ذخیره نهایی: " + err.message);
+        console.error(err);
+    } finally {
+        const btn = document.querySelector('#edit-modal button.bg-indigo-600');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = "ذخیره نهایی";
+        }
+    }
+}
