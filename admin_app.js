@@ -8,7 +8,7 @@ var supabaseClient = null;
 document.addEventListener('DOMContentLoaded', () => {
     // اضافه کردن کلاس لودینگ به بادی
     document.body.classList.add('loading');
-    
+
     setTimeout(() => {
         const splash = document.getElementById('splash-screen');
         if (splash) {
@@ -100,11 +100,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadCurrentConfig(myPoolId);
     loadAdminLoans(myPoolId);
     loadAdminProjects(myPoolId);
-    
+
     // ۶. اجرای ابزارهای سیستمی
     injectSuperAdminButton(userId);
     initSecretClick();
     updateReceiptBadge(myPoolId);
+    initOneSignalAdmin(myPoolId);
 });
 
 /************************************************
@@ -223,7 +224,7 @@ async function loadAllMembers(poolId) {
 
         // ذخیره در متغیر سراسری برای استفاده در مودال‌ها
         allMembersData = members || [];
-        
+
         const container = document.getElementById('members-list');
         if (!container) return;
 
@@ -236,7 +237,7 @@ async function loadAllMembers(poolId) {
         container.innerHTML = members.map(m => {
             // محاسبه مجموع واریزی‌های این شخص
             const userIn = txs ? txs.filter(t => t.member_id === m.id && t.type === 'in').reduce((s, a) => s + Number(a.amount), 0) : 0;
-            
+
             return `
                 <div class="bg-white p-4 rounded-[2rem] border border-slate-50 flex justify-between items-center mb-3 shadow-sm">
                     <div class="text-right">
@@ -275,10 +276,10 @@ async function openReportModalById(id) {
     document.getElementById('rep-name').innerText = m.full_name;
     document.getElementById('rep-mobile').innerText = m.mobile;
     document.getElementById('rep-score').innerText = m.credit_score || 100;
-    
+
     const { data: txs } = await supabaseClient.from('transactions').select('*').eq('member_id', m.id).eq('status', 'approved');
     let tin = txs ? txs.filter(t => t.type === 'in').reduce((s, a) => s + Number(a.amount), 0) : 0;
-    
+
     const debt = Number(m.debt_target || 0);
     const remain = Math.max(0, debt - tin);
     const progress = debt > 0 ? Math.min(Math.floor((tin / debt) * 100), 100) : 0;
@@ -322,7 +323,7 @@ async function runLottery() {
     try {
         await supabaseClient.from('lottery_results').insert([{ pool_id: poolId, winner_name: winner.full_name, month_name: 'دی' }]);
         await supabaseClient.from('transactions').insert([{ pool_id: poolId, member_id: winner.id, amount: Number(amt), status: 'approved', type: 'out', receipt_url: 'پرداخت قرعه‌کشی' }]);
-        
+
         let newWon = (winner.won_shares || 0) + 1;
         await supabaseClient.from('members').update({ won_shares: newWon, has_won: newWon >= winner.total_shares, debt_target: (Number(winner.debt_target) || 0) + Number(amt) }).eq('id', winner.id);
         alert("انجام شد ✅"); location.reload();
@@ -437,7 +438,7 @@ async function createNewProject() {
         alert(`✅ دارایی پروژه "${name}" خریداری شد و مبلغ از صندوق سرمایه کسر گردید.`);
         document.getElementById('proj-name').value = "";
         document.getElementById('proj-capital').value = "";
-        
+
         calculateStats(poolId); // بروزرسانی موجودی ۳ صندوق
         loadAdminProjects(poolId); // بروزرسانی لیست
 
@@ -669,27 +670,70 @@ function initSecretClick() {
     if (icon) icon.parentElement.onclick = () => { c++; if (c === 10) { const k = localStorage.getItem('master_access_key'); if(k) localStorage.removeItem('master_access_key'); else localStorage.setItem('master_access_key', 'Idris_Master_Admin_X'); location.reload(); } };
 }
 
+/************************************************
+ * ارسال نوتیفیکیشن فقط برای اعضایی که قسط نداده‌اند
+ ************************************************/
 async function sendPushToUnpaid() {
-    const APP_ID = "YOUR_APP_ID"; // بعداً جایگزین کن
-    const API_KEY = "YOUR_API_KEY"; // بعداً جایگزین کن
+    const APP_ID = "6235857d-565c-4223-bffa-af420f2cd45b"; 
+    const API_KEY = "os_v2_app_mi2yk7kwlrbchp72v5ba6lgulm3yudga3sbeet5dt2feqhyer27faufsiea2acnuio5vcmebonhdyyw5vqqo6zfqc3i3gnyw6";
+    const poolId = localStorage.getItem('pool_id');
 
-    // اگر هنوز کلیدها را ست نکردی، سیستم هوشمندانه هشدار بدهد
-    if (APP_ID === "YOUR_APP_ID") {
-        alert("⚠️ سیستم اعلان آماده است اما هنوز به OneSignal وصل نشده است. \n ابتدا در Vercel منتشر کنید و کلیدها را بگیرید.");
-        return;
-    }
-
-    if (!confirm("🔔 ارسال یادآوری برای بدهکاران؟")) return;
+    if (!confirm("🔔 آیا مطمئن هستید که می‌خواهید برای بدهکاران این ماه یادآوری بفرستید؟")) return;
 
     try {
-        const headers = new Headers();
-        headers.append("Content-Type", "application/json; charset=utf-8");
-        headers.append("Authorization", "Basic " + API_KEY);
+        // ۱. پیدا کردن تاریخ شروع ماه جاری میلادی
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-        // ... بقیه منطق پیدا کردن بدهکاران ...
-    } catch (e) { console.log("Notification Logic Error"); }
+        // ۲. گرفتن لیست تمام اعضای این صندوق
+        const { data: members } = await supabaseClient.from('members').select('id').eq('pool_id', poolId);
+
+        // ۳. گرفتن لیست کسانی که در این ماه پرداخت تایید شده دارند
+        const { data: paidUsers } = await supabaseClient
+            .from('transactions')
+            .select('member_id')
+            .eq('pool_id', poolId)
+            .eq('status', 'approved')
+            .eq('type', 'in')
+            .gte('created_at', firstDay);
+
+        const paidIds = paidUsers.map(p => String(p.member_id));
+        
+        // ۴. فیلتر کردن آیدی بدهکاران
+        const unpaidIds = members
+            .filter(m => !paidIds.includes(String(m.id)))
+            .map(m => String(m.id));
+
+        if (unpaidIds.length === 0) {
+            alert("همه اعضا واریزی این ماه را انجام داده‌اند! ✨");
+            return;
+        }
+
+        // ۵. ارسال پیام به OneSignal
+        const response = await fetch("https://onesignal.com/api/v1/notifications", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": "Basic " + API_KEY
+            },
+            body: JSON.stringify({
+                app_id: APP_ID,
+                include_external_user_ids: unpaidIds, 
+                headings: { "fa": "یادآوری واریز قسط" },
+                contents: { "fa": "هم‌صندوقی عزیز، قسط این ماه شما هنوز ثبت نشده است. لطفاً نسبت به ارسال فیش اقدام کنید." }
+            })
+        });
+
+        if (response.ok) {
+            alert(`🚀 پیام یادآوری با موفقیت برای ${unpaidIds.length} نفر ارسال شد.`);
+        } else {
+            alert("❌ خطا در ارسال پیام به سرور.");
+        }
+
+    } catch (e) {
+        alert("🚨 خطای شبکه: فیلترشکن را چک کنید.");
+    }
 }
-
 
 
 // توابع مودال‌ها و UI
@@ -758,7 +802,7 @@ async function submitRenewalRequest() {
                     invest_val: investAmount 
                 })
                 .eq('id', id);
-            
+
             if (updErr) throw updErr;
 
             // ج) آپدیت امتیاز عضو
@@ -775,7 +819,7 @@ async function submitRenewalRequest() {
         }
 
         alert("عملیات با موفقیت انجام شد ✅");
-        
+
         // بروزرسانی آنی صفحه
         loadPendingReceipts(myPoolId);
         calculateStats(myPoolId);
@@ -790,7 +834,7 @@ async function submitRenewalRequest() {
 async function exportTransactionsToExcel() {
     const myPoolId = localStorage.getItem('pool_id');
     const btn = event.currentTarget;
-    
+
     btn.disabled = true;
     btn.innerHTML = 'در حال تولید فایل واقعی...';
 
@@ -853,7 +897,7 @@ async function executeProfitAction(actionType) {
 
     // درخواست مبلغی که مدیر قصد دارد برای آن تصمیم بگیرد
     let amountToProcess = prompt(`مبلغی که می‌خواهید مدیریت کنید را وارد کنید (حداکثر ${availableProfit.toLocaleString()} ت):`, availableProfit);
-    
+
     if (!amountToProcess || Number(amountToProcess) > availableProfit || Number(amountToProcess) <= 0) {
         return alert("مبلغ وارد شده نامعتبر است ⚠️");
     }
@@ -905,7 +949,7 @@ async function executeProfitAction(actionType) {
 
         alert("عملیات مالی با موفقیت در دیتابیس ثبت شد ✅");
         document.getElementById('profit-manager-modal').classList.add('hidden');
-        
+
         // آپدیت آنی آمار و لیست پروژه‌ها
         calculateStats(poolId);
         loadAdminProjects(poolId);
@@ -954,7 +998,7 @@ function openProfitManager(id, name, profit) {
 
     if (idInput) idInput.value = id;
     if (profitInput) profitInput.value = profit;
-    
+
     // ۲. نمایش اطلاعات پروژه در متن پنجره
     if (infoText) {
         infoText.innerText = `پروژه: ${name} | سود انباشته فعلی: ${Number(profit).toLocaleString()} تومان`;
@@ -991,12 +1035,12 @@ async function deleteProject(id, name) {
 
         // ۳. اطلاع‌رسانی و بروزرسانی لیست پروژه‌ها
         alert(`پروژه "${name}" با موفقیت حذف شد 🗑️`);
-        
+
         // اجرای توابع لودینگ برای آپدیت آنی صفحه
         if (typeof loadAdminProjects === 'function') {
             loadAdminProjects(myPoolId);
         }
-        
+
         // آپدیت آمار کلی صندوق‌ها
         if (typeof calculateStats === 'function') {
             calculateStats(myPoolId);
@@ -1005,5 +1049,56 @@ async function deleteProject(id, name) {
     } catch (e) {
         console.error("Error deleting project:", e.message);
         alert("خطا در حذف پروژه: " + e.message);
+    }
+}
+
+/************************************************
+ * تابع شناسایی هویت مدیر در وان‌سیگنال
+ ************************************************/
+function initOneSignalAdmin(myPoolId) {
+    if (typeof OneSignal !== 'undefined') {
+        OneSignal.push(function() {
+            // تگ زدن به مدیر برای دریافت اعلان‌های واریز فیش و وام
+            OneSignal.User.addTag("role", "admin");
+            OneSignal.User.addTag("pool_id", String(myPoolId));
+            console.log("✅ هویت مدیریتی شما به وان‌سیگنال اعلام شد.");
+        });
+    } else {
+        console.log("⚠️ کتابخانه وان‌سیگنال هنوز بارگذاری نشده است.");
+    }
+}
+/************************************************
+ * ارسال پیام همگانی به تمام اعضای صندوق
+ ************************************************/
+async function sendPushToAll() {
+    const APP_ID = "6235857d-565c-4223-bffa-af420f2cd45b"; 
+    const API_KEY = "os_v2_app_mi2yk7kwlrbchp72v5ba6lgulm3yudga3sbeet5dt2feqhyer27faufsiea2acnuio5vcmebonhdyyw5vqqo6zfqc3i3gnyw6";
+    const poolId = localStorage.getItem('pool_id');
+
+    let msg = prompt("متن پیام اطلاع‌رسانی عمومی را وارد کنید:");
+    if (!msg) return;
+
+    try {
+        const response = await fetch("https://onesignal.com/api/v1/notifications", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": "Basic " + API_KEY
+            },
+            body: JSON.stringify({
+                app_id: APP_ID,
+                // فیلتر برای ارسال فقط به اعضای همین صندوق خاص
+                filters: [
+                    { "field": "tag", "key": "pool_id", "relation": "=", "value": String(poolId) }
+                ],
+                headings: { "fa": "اطلاعیه جدید صندوق" },
+                contents: { "fa": msg }
+            })
+        });
+
+        if (response.ok) alert("🚀 پیام برای همه اعضا ارسال شد.");
+        else alert("❌ خطا در ارسال.");
+    } catch (e) {
+        alert("🚨 خطا در اتصال به اینترنت.");
     }
 }

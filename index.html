@@ -5,106 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>پنل هوشمند اعضا</title>
     
+    <!-- کتابخانه‌ها -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap');
         
-        :root {
-            --primary: #10b981;
-            --bg: #f8fafc;
-        }
+        :root { --primary: #10b981; --bg: #f8fafc; }
 
         body { 
             font-family: 'Vazirmatn', sans-serif; 
             background-color: var(--bg);
             -webkit-tap-highlight-color: transparent;
-            user-select: none;
         }
 
-        /* افکت شیشه‌ای مدرن */
+        /* استایل منوی پایین iOS Style */
         .glass {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.4);
         }
 
-        /* کارت اصلی قسط */
         .hero-gradient {
             background: linear-gradient(135deg, #064e3b 0%, #10b981 100%);
             box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.3);
         }
 
-        /* تنظیم رنگ آیکون‌های منوی پایین */
-        
-        /* تنظیمات پیشرفته منوی پایین */
-.nav-item { 
-    color: #94a3b8; 
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-    position: relative;
-}
-
-/* حالت فعال: آیکون بزرگ می‌شود و رنگ می‌گیرد */
-.nav-item.active { 
-    color: #10b981 !important; 
-    transform: translateY(-8px) scale(1.2); 
-}
-
-/* ایجاد یک هاله نوری زیر آیکون فعال */
-.nav-item.active::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    width: 5px;
-    height: 5px;
-    background: #10b981;
-    border-radius: circle;
-    box-shadow: 0 0 10px 2px rgba(16, 185, 129, 0.8);
-}
-
-/* انیمیشن کلیک */
-.btn-tap:active { 
-    transform: scale(0.8); 
-}
-
-/* جلوگیری از تداخل کلیک روی آیکون */
-.nav-item i, .nav-item span {
-    pointer-events: none;
-}
-        
-        
-        /* انیمیشن لرزش بنر */
-        @keyframes soft-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        .nav-item { color: #94a3b8; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
+        .nav-item.active { color: #10b981 !important; transform: translateY(-8px) scale(1.2); }
+        .nav-item.active::after {
+            content: ''; position: absolute; bottom: -10px; width: 5px; height: 5px;
+            background: #10b981; border-radius: 50%; box-shadow: 0 0 10px 2px rgba(16, 185, 129, 0.8);
         }
-        .animate-soft { animation: soft-pulse 2s infinite; }
 
+        .btn-tap { transition: all 0.2s ease; }
+        .btn-tap:active { transform: scale(0.8); }
+        .nav-item i, .nav-item span { pointer-events: none; }
+
+        /* Splash Screen & Loading */
+        @keyframes loading {
+            0% { width: 0%; transform: translateX(-100%); }
+            50% { width: 100%; transform: translateX(0%); }
+            100% { width: 0%; transform: translateX(100%); }
+        }
+        body.loading { overflow: hidden; height: 100vh; }
+        #splash-screen { transition: opacity 0.7s ease; z-index: 2000; }
         ::-webkit-scrollbar { display: none; }
     </style>
-    
-    <style>
-    @keyframes loading {
-        0% { width: 0%; transform: translateX(-100%); }
-        50% { width: 100%; transform: translateX(0%); }
-        100% { width: 0%; transform: translateX(100%); }
-    }
-    /* جلوگیری از اسکرول خوردن صفحه وقتی لوگو در حال نمایش است */
-    body.loading { overflow: hidden; height: 100vh; }
-    #splash-screen { transition: opacity 0.7s ease; }
-</style>
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "6235857d-565c-4223-bffa-af420f2cd45b",
-    });
-  });
-</script>
-    
+
+    <!-- OneSignal Initialization -->
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "6235857d-565c-4223-bffa-af420f2cd45b",
+        });
+      });
+    </script>
 </head>
 <body class="pb-32">
     

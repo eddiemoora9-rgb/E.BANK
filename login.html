@@ -54,16 +54,16 @@
         .input-group:focus-within i { color: #10b981; }
         .input-group:focus-within input { background: white; border: 1px solid #10b981; }
     </style>
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "6235857d-565c-4223-bffa-af420f2cd45b",
-    });
-  });
-</script>
     
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+            appId: "6235857d-565c-4223-bffa-af420f2cd45b",
+        });
+    });
+</script>
 
 </head>
 
