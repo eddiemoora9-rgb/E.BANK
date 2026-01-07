@@ -204,16 +204,17 @@ async function calculateStats(poolId) {
  ************************************************/
 async function loadAllMembers(poolId) {
     try {
-        // ۱. دریافت لیست اعضا از دیتابیس (مرتب شده بر اساس امتیاز خوش‌حسابی)
+        // ۱. دریافت لیست اعضا (فقط کسانی که مدیر نیستند) 👇
         const { data: members, error: memErr } = await supabaseClient
             .from('members')
             .select('*')
             .eq('pool_id', poolId)
+            .eq('is_admin', false) // <--- این خط باعث می‌شود مدیرها در لیست نباشند
             .order('credit_score', { ascending: false });
 
         if (memErr) throw memErr;
 
-        // ۲. دریافت تمام تراکنش‌های تایید شده برای محاسبه جمع واریزی هر نفر
+        // ۲. دریافت تراکنش‌های تایید شده
         const { data: txs, error: txErr } = await supabaseClient
             .from('transactions')
             .select('member_id, amount, type')
@@ -222,42 +223,31 @@ async function loadAllMembers(poolId) {
 
         if (txErr) throw txErr;
 
-        // ذخیره در متغیر سراسری برای استفاده در مودال‌ها
         allMembersData = members || [];
-
         const container = document.getElementById('members-list');
         if (!container) return;
 
         if (!members || members.length === 0) {
-            container.innerHTML = '<p class="text-center text-[10px] text-slate-400 py-10 font-bold tracking-widest">هیچ عضوی یافت نشد</p>';
+            container.innerHTML = '<p class="text-center text-[10px] text-slate-400 py-10 font-bold uppercase">هیچ عضوی یافت نشد</p>';
             return;
         }
 
-        // ۳. ساخت لیست اعضا با ظاهر مدرن
+        // ۳. ساخت لیست اعضا (بدون حضور مدیر)
         container.innerHTML = members.map(m => {
-            // محاسبه مجموع واریزی‌های این شخص
             const userIn = txs ? txs.filter(t => t.member_id === m.id && t.type === 'in').reduce((s, a) => s + Number(a.amount), 0) : 0;
-
+            
             return `
-                <div class="bg-white p-4 rounded-[2rem] border border-slate-50 flex justify-between items-center mb-3 shadow-sm">
-                    <div class="text-right">
+                <div class="bg-white p-4 rounded-[2rem] border border-slate-50 flex justify-between items-center mb-3 shadow-sm text-right">
+                    <div>
                         <p class="text-[11px] font-black text-slate-800">${m.full_name}</p>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-[8px] text-amber-500 font-black flex items-center gap-1">
-                                <i class="fas fa-star text-[7px]"></i> ${m.credit_score || 100}%
-                            </span>
+                            <span class="text-[8px] text-amber-500 font-black"><i class="fas fa-star text-[7px]"></i> ${m.credit_score || 100}%</span>
                             <span class="text-[8px] text-emerald-600 font-bold font-black">واریزی: ${userIn.toLocaleString()} ت</span>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <!-- دکمه گزارش -->
-                        <button onclick="openReportModalById(${m.id})" class="w-10 h-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center active:scale-90 shadow-lg">
-                            <i class="fas fa-chart-line text-xs"></i>
-                        </button>
-                        <!-- دکمه ویرایش -->
-                        <button onclick="openEditModalById(${m.id})" class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center active:scale-90">
-                            <i class="fas fa-edit text-xs"></i>
-                        </button>
+                        <button onclick="openReportModalById(${m.id})" class="w-10 h-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center active:scale-90 shadow-lg"><i class="fas fa-chart-line text-xs"></i></button>
+                        <button onclick="openEditModalById(${m.id})" class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center active:scale-90"><i class="fas fa-edit text-xs"></i></button>
                     </div>
                 </div>`;
         }).join('');
@@ -266,7 +256,6 @@ async function loadAllMembers(poolId) {
         console.error("خطا در لود اعضا:", err.message);
     }
 }
- // ۵. مدیریت اعضا (لیست، گزارش، حذف)
 
 
 async function openReportModalById(id) {
