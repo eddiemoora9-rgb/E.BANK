@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const MY_SECRET_PASSWORD = "@EddiE-Moradi1993"; // رمز عبور شما
 
     if (!userId) {
-        window.location.replace('login.html');
+        window.location.replace('index.html');
         return;
     }
 
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadMasterStats(); // اجرای تابع اصلی بارگذاری
         } else {
             alert("خطا: حساب شما دسترسی سوپر ادمین ندارد.");
-            window.location.replace('login.html');
+            window.location.replace('index.html');
         }
     } else {
         alert("رمز عبور اشتباه است ⛔");

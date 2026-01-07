@@ -3,321 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>پنل هوشمند اعضا</title>
+    <title>E.BANK | ورود</title>
     
-    <!-- کتابخانه‌ها -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.init({ appId: "6235857d-565c-4223-bffa-af420f2cd45b" });
+      });
+    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap');
-        
-        :root { --primary: #10b981; --bg: #f8fafc; }
-
         body { 
             font-family: 'Vazirmatn', sans-serif; 
-            background-color: var(--bg);
+            background: #fdfdfd;
+            background-image: radial-gradient(#e2e8f0 0.8px, transparent 0.8px);
+            background-size: 25px 25px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             -webkit-tap-highlight-color: transparent;
         }
-
-        /* استایل منوی پایین iOS Style */
-        .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+        .login-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.05);
         }
-
-        .hero-gradient {
-            background: linear-gradient(135deg, #064e3b 0%, #10b981 100%);
-            box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.3);
-        }
-
-        .nav-item { color: #94a3b8; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
-        .nav-item.active { color: #10b981 !important; transform: translateY(-8px) scale(1.2); }
-        .nav-item.active::after {
-            content: ''; position: absolute; bottom: -10px; width: 5px; height: 5px;
-            background: #10b981; border-radius: 50%; box-shadow: 0 0 10px 2px rgba(16, 185, 129, 0.8);
-        }
-
-        .btn-tap { transition: all 0.2s ease; }
-        .btn-tap:active { transform: scale(0.8); }
-        .nav-item i, .nav-item span { pointer-events: none; }
-
-        /* Splash Screen & Loading */
-        @keyframes loading {
-            0% { width: 0%; transform: translateX(-100%); }
-            50% { width: 100%; transform: translateX(0%); }
-            100% { width: 0%; transform: translateX(100%); }
-        }
-        body.loading { overflow: hidden; height: 100vh; }
+        input { text-align: right !important; direction: rtl !important; }
+        .ltr-input { direction: ltr !important; text-align: right !important; }
+        .btn-premium { background: #0f172a; transition: all 0.3s ease; }
+        .btn-premium:active { transform: scale(0.96); background: #000; }
+        @keyframes float { 0% { transform: translateY(0px) rotate(3deg); } 50% { transform: translateY(-5px) rotate(-3deg); } 100% { transform: translateY(0px) rotate(3deg); } }
+        .logo-animate { animation: float 4s ease-in-out infinite; }
         #splash-screen { transition: opacity 0.7s ease; z-index: 2000; }
+        body.loading { overflow: hidden; height: 100vh; }
         ::-webkit-scrollbar { display: none; }
     </style>
-
-    <!-- OneSignal Initialization -->
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "6235857d-565c-4223-bffa-af420f2cd45b",
-        });
-      });
-    </script>
-    <!-- تنظیمات آیکون برای اندروید و PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#064e3b">
-
-<!-- تنظیمات آیکون برای آیفون (iOS) -->
-<link rel="apple-touch-icon" href="icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-<body class="pb-32">
-    
-    <body class="loading"> <!-- کلمه loading رو هم به بادی اضافه کن -->
-    
-    <!-- Splash Screen Start -->
-    <div id="splash-screen" class="fixed inset-0 z-[2000] bg-slate-950 flex flex-col items-center justify-center">
+
+<body class="loading p-4">
+
+    <!-- ۱. Splash Screen (لوگوی شروع) -->
+    <div id="splash-screen" class="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center">
         <div class="relative">
-            <!-- لوگوی مرکزی -->
-            <div class="w-24 h-24 bg-gradient-to-tr from-emerald-500 to-emerald-400 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(16,185,129,0.4)] animate-pulse">
-                <i class="fas fa-wallet text-white text-4xl"></i>
+            <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-emerald-400 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.3)] animate-pulse">
+                <i class="fas fa-university text-white text-3xl"></i>
             </div>
-            <!-- افکت نور پشت لوگو -->
-            <div class="absolute -inset-4 bg-emerald-500/20 blur-3xl rounded-full"></div>
+            <div class="absolute -inset-4 bg-emerald-500/10 blur-3xl rounded-full"></div>
         </div>
-        
-        <!-- نام برند -->
-        <div class="mt-8 text-center">
-            <h1 class="text-3xl font-black text-white tracking-[0.2em] ml-2">E<span class="text-emerald-500">.</span>BANK</h1>
-            <p class="text-[8px] text-slate-500 font-bold uppercase tracking-[0.5em] mt-2">Future of Finance</p>
-        </div>
-        
-        <!-- لودینگ بار ظریف -->
-        <div class="absolute bottom-16 w-32 h-1 bg-slate-900 rounded-full overflow-hidden">
-            <div class="h-full bg-emerald-500 animate-[loading_2s_ease-in-out_infinite]"></div>
+        <div class="mt-6 text-center">
+            <h1 class="text-2xl font-black text-white tracking-[0.2em] ml-2">E<span class="text-emerald-500">.</span>BANK</h1>
         </div>
     </div>
-    <!-- Splash Screen End -->
-    
-    <!-- اینجا بقیه کدهای قبلی سایتت شروع میشه... -->
 
-    <!-- هدر -->
-    <header class="p-6 flex justify-between items-center">
-        <div class="flex items-center gap-3">
+    <!-- ۲. کارت لاگین اصلی (گوشه‌ها اصلاح شد) -->
+    <div class="login-card w-full max-w-sm p-8 rounded-[2.5rem]">
+        
+        <!-- بخش لوگوی سبز رنگ که درخواست دادی -->
+        <div class="text-center mb-6">
+            <div class="logo-animate w-14 h-14 bg-emerald-500 rounded-2xl shadow-xl shadow-emerald-100 flex items-center justify-center text-white mx-auto mb-3">
+                <i class="fas fa-wallet text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-[900] text-slate-900 tracking-tighter leading-none">E<span class="text-emerald-500">.</span>BANK</h2>
+            <p class="text-[7px] text-slate-400 font-bold uppercase mt-1.5 tracking-[0.3em]">Secure Access Portal</p>
+        </div>
+
+        <div class="space-y-3.5">
             <div class="relative">
-                <div class="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-emerald-600 border border-emerald-50">
-                    <i class="fas fa-user-astronaut text-xl"></i>
-                </div>
-                <span class="absolute -top-1 -left-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
-            </div>
-            <div>
-                <p class="text-[9px] text-gray-400 font-black uppercase tracking-tighter">Member Access</p>
-                <h1 class="text-sm font-black text-slate-800" id="user-name-display">...</h1>
-            </div>
-        </div>
-<div class="flex gap-2">
-    <!-- دکمه تنظیمات (چرخ‌دنده) -->
-    <button onclick="openPassModal()" class="w-10 h-10 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-400 active:scale-90 transition-all">
-        <i class="fas fa-cog text-sm"></i>
-    </button>
-    <!-- دکمه خروج -->
-    <button onclick="handleLogout()" class="w-10 h-10 bg-white rounded-xl shadow-sm border border-red-50 flex items-center justify-center text-red-500 active:scale-90 transition-all">
-        <i class="fas fa-power-off text-sm"></i>
-    </button>
-</div>
-    </header>
-
-    <main class="px-6 space-y-6">
-
-        <!-- بخش خانه (HOME) -->
-        <section id="home-sec" class="space-y-5">
-            
-            <!-- ۱. کارت قسط (متوسط و شیک) -->
-            <div class="hero-gradient p-7 rounded-[2.5rem] text-white relative overflow-hidden">
-                <div class="relative z-10">
-                    <div class="flex justify-between items-center mb-6">
-                        <i class="fas fa-microchip opacity-30"></i>
-                        <span class="text-[8px] font-black bg-black/20 px-2 py-1 rounded-lg uppercase tracking-widest">Monthly Due</span>
-                    </div>
-                    <p class="text-[10px] opacity-80 mb-1 font-bold">مبلغ قسط این ماه:</p>
-                    <h3 class="text-2xl font-black mb-4" id="amount-display">۰ تومان</h3>
-                    <div class="bg-white/10 p-2 rounded-xl border border-white/5 inline-block">
-                        <p id="status-badge" class="text-[9px] font-black tracking-tight">وضعیت: در حال بروزرسانی...</p>
-                    </div>
-                </div>
-                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+                <label class="text-[8px] text-slate-400 font-black mr-4 mb-0.5 block uppercase">Pool ID</label>
+                <input type="text" id="login-pool-code" placeholder="کد اختصاصی بانک" 
+                    class="ltr-input w-full p-3.5 pr-10 bg-slate-50 border border-transparent rounded-2xl text-sm font-black outline-none focus:bg-white focus:border-emerald-500 placeholder:text-slate-300 uppercase">
+                <i class="fas fa-key absolute right-4 top-8 text-slate-300 text-xs"></i>
             </div>
 
-            <!-- ۲. ردیف کارت‌های پس‌انداز و سود (کوچک‌تر) -->
-            <div class="grid grid-cols-5 gap-4">
-                <!-- کارت پس‌انداز (۶۰٪ عرض) -->
-                <div class="col-span-3 bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between h-32">
-                    <div class="w-8 h-8 bg-blue-50 text-blueclass=""-500 rounded-xl flex items-center justify-center text-xs">
-                        <i class="fas fa-piggy-bank"></i>
-                    </div>
-                    <div>
-                        <p class="text-[9px] text-gray-400 font-black mb-1">کل پس‌انداز</p>
-                        <h4 id="user-total-balance" class="text-sm font-black text-slate-800">۰ تومان</h4>
-                    </div>
-                </div>
-
-                <!-- کارت سود دریافتی (۴۰٪ عرض - کوچکترین) -->
-                <div class="col-span-2 bg-slate-900 p-5 rounded-[2rem] text-white shadow-lg flex flex-col justify-between h-32">
-                    <div class="w-8 h-8 bg-white/10 text-emerald-400 rounded-xl flex items-center justify-center text-xs">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div>
-                        <p class="text-[8px] text-slate-500 font-bold mb-1">سود دریافتی</p>
-                        <h4 id="user-total-profit" class="text-xs font-black text-emerald-400">۰</h4>
-                    </div>
-                </div>
+            <div class="relative">
+                <label class="text-[8px] text-slate-400 font-black mr-4 mb-0.5 block uppercase">Mobile Number</label>
+                <input type="tel" id="login-mobile" placeholder="شماره موبایل" 
+                    class="ltr-input w-full p-3.5 pr-10 bg-slate-50 border border-transparent rounded-2xl text-sm font-black outline-none focus:bg-white focus:border-emerald-500 placeholder:text-slate-300">
+                <i class="fas fa-phone-alt absolute right-4 top-8 text-slate-300 text-xs"></i>
             </div>
 
-            <!-- ۳. بخش ارسال فیش (طراحی متمرکز) -->
-            <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                <div class="flex items-center gap-2 mb-5">
-                    <div class="w-1 h-4 bg-emerald-500 rounded-full"></div>
-                    <h4 class="text-xs font-black text-slate-800">ثبت تراکنش جدید</h4>
-                </div>
-                
-                <div class="space-y-4">
-                    <div class="bg-slate-50 p-1 rounded-2xl flex items-center">
-                        <i class="fas fa-coins text-slate-300 mx-4 text-xs"></i>
-                        <input type="number" id="receipt-amount-input" placeholder="مبلغ دقیق واریزی (تومان)" class="w-full p-3 bg-transparent border-none outline-none text-xs font-black text-slate-700">
-                    </div>
-
-                    <input type="file" id="receipt-input" class="hidden" onchange="document.getElementById('file-label').innerText = 'فایل آماده است: ' + this.files[0].name">
-                    <label for="receipt-input" id="file-label" class="flex items-center justify-center gap-2 w-full py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-bold text-slate-400 cursor-pointer active:bg-slate-100 transition-all">
-                        <i class="fas fa-camera"></i>
-                        انتخاب تصویر فیش بانکی
-                    </label>
-
-                    <button onclick="uploadReceipt()" id="upload-btn" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs shadow-xl active:scale-95 transition-all">
-                        تایید و ارسال نهایی
-                    </button>
-                </div>
-            </div>
-
-            <!-- ۴. بنر برنده -->
-            <div class="bg-amber-400 p-4 rounded-3xl flex itestyle=""ms-center justify-between shadow-lg shadow-amber-200">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-black/10 rounded-2xl flex items-center justify-center text-white">
-                        <i class="fas fa-crown text-sm"></i>
-                    </div>
-                    <div>
-                        <p class="text-[8px] font-black text-amber-900 uppercase opacity-60">Last Winner</p>
-                        <p class="text-xs font-black text-amber-900" id="lucky-winner">...</p>
-                    </div>
-                </div>
-                <i class="fas fa-star text-amber-200 text-xs opacity-50"></i>
+            <div class="relative">
+                <label class="text-[8px] text-slate-400 font-black mr-4 mb-0.5 block uppercase">Security Pin</label>
+                <input type="password" id="login-password" placeholder="رمز عبور" 
+                    class="w-full p-3.5 pr-10 bg-slate-50 border border-transparent rounded-2xl text-sm font-black outline-none focus:bg-white focus:border-emerald-500 placeholder:text-slate-300">
+                <i class="fas fa-lock absolute right-4 top-8 text-slate-300 text-xs"></i>
             </div>
             
-            
-            <!-- کارت تماس با مدیر صندوق -->
-<div class="bg-white p-5 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center justify-between mt-4">
-    <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-slate-100 text-emerald-600 rounded-xl flex items-center justify-center">
-            <i class="fab fa-whatsapp text-xl"></i>
-        </div>
-        <div>
-            <p class="text-[9px] text-slate-400 font-bold">ارتباط مستقیم</p>
-            <h4 class="text-[10px] font-black text-slate-800">گفتگو با مدیر صندوق</h4>
-        </div>
-    </div>
-    <a id="manager-wa-link" href="#" target="_blank" class="btn-tap bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black shadow-md shadow-emerald-100">
-        پیام دادن
-    </a>
-</div>
-            
-        </section>
-
-        <!-- بخش تراکنش‌ها (TRANSACTIONS) -->
-        <section id="trans-sec" class="hidden space-y-4">
-            <h4 class="text-xs font-black text-slate-800 px-1">تاریخچه فعالیت‌های مالی</h4>
-            <div id="user-transactions" class="space-y-3"></div>
-        </section>
-
-        <!-- بخش وام (LOANS) -->
-        <section id="loan-sec" class="hidden space-y-6">
-            <div class="bg-indigo-600 p-6 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
-                <h4 class="text-xs font-black mb-4 relative z-10">درخواست مساعده سریع</h4>
-                <div class="space-y-3 relative z-10">
-                    <input type="number" id="loan-amount" placeholder="مبلغ مورد نیاز" class="w-full p-4 bg-white/10 border border-white/20 rounded-2xl text-xs font-black outline-none placeholder:text-white/40">
-                    <textarea id="loan-desc" placeholder="دلیل درخواست..." class="w-full p-4 bg-white/10 border border-white/20 rounded-2xl text-xs font-medium outline-none placeholder:text-white/40 h-20"></textarea>
-                    <button onclick="submitLoanRequest()" id="submit-loan-btn" class="w-full bg-white text-indigo-600 py-4 rounded-2xl font-black text-xs active:scale-95 transition-all">ثبت در لیست رای‌گیری</button>
-                </div>
-                <i class="fas fa-hand-holding-heart absolute -bottom-4 -right-4 text-7xl opacity-10"></i>
-            </div>
-            <div id="loan-list-container" class="space-y-4"></div>
-        </section>
-
-    </main>
-
-    <!-- منوی پایین (Floating Dock) -->
-    <div class="fixed bottom-6 left-6 right-6 z-[200]">
-        <nav class="glass h-20 rounded-[2.5rem] shadow-2xl flex justify-around items-center px-4">
-            <button onclick="showSec(this, 'home-sec')" class="nav-item active flex flex-col items-center flex-1">
-                <i class="fas fa-house-chimney text-lg"></i>
-                <span class="text-[7px] font-black mt-1 uppercase">Home</span>
+            <button onclick="handleLogin()" id="login-btn" 
+                class="btn-premium w-full text-white py-4 rounded-2xl font-black text-xs shadow-xl flex items-center justify-center gap-2 mt-2">
+                <span>تایید هویت و ورود</span>
             </button>
-            <button onclick="showSec(this, 'trans-sec')" class="nav-item flex flex-col items-center flex-1">
-                <i class="fas fa-receipt text-lg"></i>
-                <span class="text-[7px] font-black mt-1 uppercase">History</span>
-            </button>
-            <button onclick="showSec(this, 'loan-sec')" class="nav-item flex flex-col items-center flex-1">
-                <i class="fas fa-handshake-angle text-lg"></i>
-                <span class="text-[7px] font-black mt-1 uppercase">Loans</span>
-            </button>
-        </nav>
-    </div>
 
-
-<!-- مودال تغییر رمز عبور -->
-<div id="pass-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[300] flex items-center justify-center p-6">
-    <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl">
-        <h4 class="font-black text-slate-800 text-sm mb-6 text-center">تغییر رمز عبور</h4>
-        <div class="space-y-4">
-            <input type="password" id="current-password" placeholder="رمز فعلی" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:border-emerald-500 font-bold">
-            <input type="password" id="new-password" placeholder="رمز جدید" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:border-emerald-500 font-bold">
-            <div class="flex gap-2 pt-2">
-                <button onclick="submitNewPassword()" id="change-pass-btn" class="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs shadow-lg shadow-emerald-100">ذخیره رمز جدید</button>
-                <button onclick="closePassModal()" class="flex-1 bg-slate-100 text-slate-400 py-4 rounded-2xl font-black text-xs">لغو</button>
+            <div class="flex flex-col gap-2 pt-4 text-center">
+                <button onclick="alert('با مدیر تماس بگیرید')" class="text-[8px] font-bold text-slate-400">فراموشی رمز عبور</button>
+                <div class="h-px bg-slate-100 w-1/3 mx-auto my-0.5"></div>
+                <button onclick="location.href='create_pool.html'" class="text-[10px] font-black text-emerald-600 flex items-center justify-center gap-1">
+                    تأسیس بانک جدید <i class="fas fa-plus-circle text-[9px]"></i>
+                </button>
             </div>
         </div>
     </div>
-</div>
 
+    <!-- ۳. امضای هنری (مکان اصلاح شد) -->
+    <div class="mt-8 text-center">
+        <p class="text-[7px] font-black text-slate-300 uppercase tracking-[0.4em] opacity-80">
+            Designed & Developed by <span class="text-emerald-500">EDDIE</span>
+        </p>
+    </div>
 
-
-
-    <!-- کد اسکریپت جابجایی صفحات -->
     <script>
-        function showSec(btn, id) {
-            // ۱. مخفی کردن تمام بخش‌ها
-            ['home-sec', 'trans-sec', 'loan-sec'].forEach(s => {
-                const el = document.getElementById(s);
-                if(el) el.classList.add('hidden');
-            });
+        const SUPABASE_URL = 'https://kqnsbnpznkwkwukzokik.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_ZqXeccdaSzZUivCwU38WcQ_m05uT4y6';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                if (splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => { splash.remove(); document.body.classList.remove('loading'); }, 700);
+                }
+            }, 2500);
+            const lastPool = localStorage.getItem('saved_pool_code');
+            if (lastPool) document.getElementById('login-pool-code').value = lastPool;
+        });
+
+        async function handleLogin() {
+            const poolCode = document.getElementById('login-pool-code').value.trim().toUpperCase();
+            const mobile = document.getElementById('login-mobile').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
             
-            // ۲. نمایش بخش مورد نظر
-            const target = document.getElementById(id);
-            if(target) target.classList.remove('hidden');
-
-            // ۳. مدیریت رنگ و استایل آیکون‌ها
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active', 'text-emerald-600');
-                item.classList.add('text-gray-400');
-            });
-
-            btn.classList.add('active', 'text-emerald-600');
-            btn.classList.remove('text-gray-400');
+            if (!poolCode || !mobile || !password) return alert("فیلدها را پر کنید");
+            btn.innerText = "تایید اعتبار..."; btn.disabled = true;
+            
+            try {
+                const { data: pool } = await supabaseClient.from('pools').select('id').eq('pool_code', poolCode).maybeSingle();
+                if (!pool) { btn.disabled = false; btn.innerText = "تایید هویت و ورود"; return alert("❌ کد بانک غلط است"); }
+                
+                const { data: user } = await supabaseClient.from('members').select('*').eq('pool_id', pool.id).eq('mobile', mobile).eq('password', password).maybeSingle();
+                if (!user) { btn.disabled = false; btn.innerText = "تایید هویت و ورود"; return alert("❌ مشخصات اشتباه است"); }
+                
+                localStorage.clear(); sessionStorage.clear();
+                sessionStorage.setItem('user_id', user.id);
+                sessionStorage.setItem('pool_id', user.pool_id);
+                sessionStorage.setItem('user_name', user.full_name);
+                sessionStorage.setItem('is_admin', String(user.is_admin));
+                localStorage.setItem('saved_pool_code', poolCode);
+                localStorage.setItem('is_super_admin', (user.is_super_admin === true || mobile === '09120612550') ? 'true' : 'false');
+                
+                window.location.replace(user.is_admin ? 'admin.html' : 'member.html');
+            } catch (e) { alert("خطا: " + e.message); btn.disabled = false; }
         }
     </script>
-
-    <!-- اتصال به فایل اصلی برنامه -->
-    <script src="app.js"></script>
 </body>
 </html>

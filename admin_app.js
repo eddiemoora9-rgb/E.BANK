@@ -46,13 +46,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ۲. دریافت اطلاعات از حافظه گوشی
-    const isAdmin = localStorage.getItem('is_admin');
-    const myPoolId = localStorage.getItem('pool_id');
-    const userId = localStorage.getItem('user_id');
+    // جایگزین خطوط اول DOMContentLoaded
+const userId = sessionStorage.getItem('user_id');
+const myPoolId = sessionStorage.getItem('pool_id');
+const userName = sessionStorage.getItem('user_name');
 
     // ۳. بررسی لاگین بودن مدیر
     if (isAdmin !== 'true' || !myPoolId) {
-        window.location.replace('login.html');
+        window.location.replace('index.html');
         return;
     }
 
@@ -737,7 +738,7 @@ function openBuyQuotaModal() {
     });
     document.getElementById('quota-modal').classList.remove('hidden'); 
 }
-function showLockPage() { document.body.innerHTML = `<div style="height:100vh; background:#0f172a; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; font-family:Vazirmatn; direction:rtl;"><i class="fas fa-lock" style="font-size:50px; color:#ef4444; margin-bottom:20px;"></i><h2 style="font-weight:900;">دسترسی مسدود شد</h2><p>اشتراک یا سهمیه این صندوق به پایان رسیده است.</p><button onclick="localStorage.clear(); location.href='login.html'" style="margin-top:30px; background:white; color:black; padding:10px 20px; border-radius:15px; font-weight:bold;">خروج</button></div>`; }
+function showLockPage() { document.body.innerHTML = `<div style="height:100vh; background:#0f172a; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; font-family:Vazirmatn; direction:rtl;"><i class="fas fa-lock" style="font-size:50px; color:#ef4444; margin-bottom:20px;"></i><h2 style="font-weight:900;">دسترسی مسدود شد</h2><p>اشتراک یا سهمیه این صندوق به پایان رسیده است.</p><button onclick="localStorage.clear(); location.href='index.html'" style="margin-top:30px; background:white; color:black; padding:10px 20px; border-radius:15px; font-weight:bold;">خروج</button></div>`; }
 function updateReceiptBadge(poolId) { supabaseClient.from('transactions').select('id').eq('pool_id', poolId).eq('status', 'pending').then(({data}) => { const dot = document.getElementById('receipt-dot'); if (dot && data && data.length > 0) dot.classList.remove('hidden'); }); }
 
 // توابع خرید سهمیه و تمدید اشتراک

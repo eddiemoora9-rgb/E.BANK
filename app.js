@@ -6,13 +6,14 @@ var SUPABASE_KEY = 'sb_publishable_ZqXeccdaSzZUivCwU38WcQ_m05uT4y6';
 var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const userId = localStorage.getItem('user_id');
-    const myPoolId = localStorage.getItem('pool_id');
-    const userName = localStorage.getItem('user_name');
+    // جایگزین خطوط اول DOMContentLoaded
+const userId = sessionStorage.getItem('user_id');
+const myPoolId = sessionStorage.getItem('pool_id');
+const userName = sessionStorage.getItem('user_name');
 
     // لایه امنیتی لاگین
     if (!userId || !myPoolId) {
-        window.location.replace('login.html');
+        window.location.replace('index.html');
         return;
     }
 
@@ -253,7 +254,13 @@ async function checkMonthlyReminder(userId, poolId) {
     }
 }
 
-function handleLogout() { if (confirm("خروج؟")) { localStorage.clear(); window.location.replace('login.html'); } }
+// در فایل app.js
+function handleLogout() {
+    if (confirm("آیا می‌خواهید از حساب خود خارج شوید؟")) {
+        sessionStorage.clear();
+        window.location.replace('index.html'); // بازگشت به صفحه اصلی
+    }
+}
 
 // تمدید و تنظیمات رمز
 function openPassModal() { document.getElementById('pass-modal').classList.remove('hidden'); }
