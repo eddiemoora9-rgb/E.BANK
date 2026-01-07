@@ -1106,61 +1106,61 @@ async function sendPushToAll() {
 /************************************************
  * تابع ذخیره تغییرات ویرایش عضو (نهایی و بدون خطا)
  ************************************************/
+/************************************************
+ * تابع ویرایش عضو با قابلیت کسر/اضافه سهمیه هوشمند
+ ************************************************/
 async function updateMember() {
+    const id = document.getElementById('edit-member-id').value;
+    const newName = document.getElementById('edit-member-name').value;
+    const newMobile = document.getElementById('edit-member-mobile').value;
+    const newPass = document.getElementById('edit-member-pass').value;
+    const newShares = parseInt(document.getElementById('edit-member-shares').value) || 1;
+    const isAdmin = document.getElementById('edit-member-is-admin').checked;
+    const poolId = localStorage.getItem('pool_id');
+
+    const btn = event.currentTarget;
+    btn.disabled = true; btn.innerText = "در حال بروزرسانی...";
+
     try {
-        // ۱. گرفتن المان‌ها از صفحه
-        const idEl = document.getElementById('edit-member-id');
-        const nameEl = document.getElementById('edit-member-name');
-        const mobileEl = document.getElementById('edit-member-mobile');
-        const passEl = document.getElementById('edit-member-pass');
-        const sharesEl = document.getElementById('edit-member-shares');
-        const adminEl = document.getElementById('edit-member-is-admin');
+        // ۱. گرفتن اطلاعات فعلی عضو و وضعیت سهمیه صندوق
+        const { data: oldMember } = await supabaseClient.from('members').select('total_shares').eq('id', id).single();
+        const { data: pool } = await supabaseClient.from('pools').select('member_capacity').eq('id', poolId).single();
 
-        // بررسی اینکه آیا همه کادرها در HTML وجود دارند
-        if (!idEl || !nameEl || !mobileEl) {
-            console.error("خطا: المان‌های مودال ویرایش در HTML پیدا نشدند!");
-            return;
+        const shareDifference = newShares - oldMember.total_shares; // محاسبه اختلاف
+
+        // ۲. اگر سهم زیاد شده، چک کن سهمیه کافی هست یا نه
+        if (shareDifference > 0) {
+            if (pool.member_capacity < shareDifference) {
+                alert(`❌ سهمیه شما کافی نیست! برای اضافه کردن ${shareDifference} سهم جدید، نیاز به خرید سهمیه دارید.`);
+                btn.disabled = false; btn.innerText = "ذخیره نهایی";
+                return;
+            }
+            // کسر مابه‌التفاوت از سهمیه کل
+            await supabaseClient.from('pools').update({ member_capacity: pool.member_capacity - shareDifference }).eq('id', poolId);
+        } 
+        // ۳. اگر سهم کم شده، مابه‌التفاوت به سهمیه کل برگردد
+        else if (shareDifference < 0) {
+            await supabaseClient.from('pools').update({ member_capacity: pool.member_capacity + Math.abs(shareDifference) }).eq('id', poolId);
         }
 
-        const id = idEl.value;
-        const btn = event.currentTarget;
-        btn.disabled = true;
-        btn.innerText = "در حال ذخیره...";
-
-        // ۲. ساخت شیء داده‌های جدید
+        // ۴. آپدیت نهایی اطلاعات عضو
         let updateData = {
-            full_name: nameEl.value.trim(),
-            mobile: mobileEl.value.trim(),
-            total_shares: parseInt(sharesEl.value) || 1,
-            is_admin: adminEl.checked
+            full_name: newName,
+            mobile: newMobile,
+            total_shares: newShares,
+            is_admin: isAdmin
         };
+        if (newPass) updateData.password = newPass;
 
-        // ۳. فقط اگر رمز جدید وارد شده باشد، آن را تغییر بده
-        if (passEl.value && passEl.value.trim() !== "") {
-            updateData.password = passEl.value.trim();
-        }
+        const { error: finalErr } = await supabaseClient.from('members').update(updateData).eq('id', id);
 
-        // ۴. ارسال به Supabase
-        const { error } = await supabaseClient
-            .from('members')
-            .update(updateData)
-            .eq('id', id);
+        if (finalErr) throw finalErr;
 
-        if (error) throw error;
+        alert("تغییرات با موفقیت اعمال و سهمیه بروزرسانی شد ✅");
+        location.reload();
 
-        // ۵. موفقیت
-        alert("تغییرات با موفقیت ذخیره شد ✅");
-        closeEditModal(); // بستن پنجره
-        loadAllMembers(localStorage.getItem('pool_id')); // آپدیت لیست
-
-    } catch (err) {
-        alert("خطا در ذخیره نهایی: " + err.message);
-        console.error(err);
-    } finally {
-        const btn = document.querySelector('#edit-modal button.bg-indigo-600');
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = "ذخیره نهایی";
-        }
+    } catch (e) {
+        alert("خطا در ویرایش: " + e.message);
+        btn.disabled = false; btn.innerText = "ذخیره نهایی";
     }
 }
